@@ -33,22 +33,23 @@ namespace GameOfLife
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.rewindToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.playToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugLabel = new System.Windows.Forms.Label();
             this.gameTimer = new System.Windows.Forms.Timer(this.components);
-            this.playToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gridSizeLabel = new System.Windows.Forms.Label();
+            this.speedControl = new System.Windows.Forms.TrackBar();
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.speedControl)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.rewindToolStripMenuItem,
             this.playToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(800, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(888, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -67,23 +68,6 @@ namespace GameOfLife
             this.newToolStripMenuItem.Text = "New";
             this.newToolStripMenuItem.Click += new System.EventHandler(this.NewToolStripMenuItem_Click);
             // 
-            // rewindToolStripMenuItem
-            // 
-            this.rewindToolStripMenuItem.Name = "rewindToolStripMenuItem";
-            this.rewindToolStripMenuItem.Size = new System.Drawing.Size(12, 20);
-            // 
-            // debugLabel
-            // 
-            this.debugLabel.AutoSize = true;
-            this.debugLabel.Location = new System.Drawing.Point(12, 24);
-            this.debugLabel.Name = "debugLabel";
-            this.debugLabel.Size = new System.Drawing.Size(0, 13);
-            this.debugLabel.TabIndex = 1;
-            // 
-            // gameTimer
-            // 
-            this.gameTimer.Tick += new System.EventHandler(this.GameTimer_Tick);
-            // 
             // playToolStripMenuItem
             // 
             this.playToolStripMenuItem.Name = "playToolStripMenuItem";
@@ -91,11 +75,45 @@ namespace GameOfLife
             this.playToolStripMenuItem.Text = "Play";
             this.playToolStripMenuItem.Click += new System.EventHandler(this.PlayToolStripMenuItem_Click);
             // 
+            // debugLabel
+            // 
+            this.debugLabel.AutoSize = true;
+            this.debugLabel.Location = new System.Drawing.Point(12, 37);
+            this.debugLabel.Name = "debugLabel";
+            this.debugLabel.Size = new System.Drawing.Size(62, 13);
+            this.debugLabel.TabIndex = 1;
+            this.debugLabel.Text = "debug label";
+            // 
+            // gameTimer
+            // 
+            this.gameTimer.Enabled = true;
+            this.gameTimer.Tick += new System.EventHandler(this.GameTimer_Tick);
+            // 
+            // gridSizeLabel
+            // 
+            this.gridSizeLabel.AutoSize = true;
+            this.gridSizeLabel.Location = new System.Drawing.Point(12, 24);
+            this.gridSizeLabel.Name = "gridSizeLabel";
+            this.gridSizeLabel.Size = new System.Drawing.Size(70, 13);
+            this.gridSizeLabel.TabIndex = 2;
+            this.gridSizeLabel.Text = "gridSizeLabel";
+            // 
+            // speedControl
+            // 
+            this.speedControl.Location = new System.Drawing.Point(760, 27);
+            this.speedControl.Name = "speedControl";
+            this.speedControl.Size = new System.Drawing.Size(116, 45);
+            this.speedControl.TabIndex = 3;
+            this.speedControl.Value = 5;
+            this.speedControl.Scroll += new System.EventHandler(this.SpeedControl_Scroll);
+            // 
             // GameForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(888, 515);
+            this.Controls.Add(this.speedControl);
+            this.Controls.Add(this.gridSizeLabel);
             this.Controls.Add(this.debugLabel);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -105,6 +123,7 @@ namespace GameOfLife
             this.Click += new System.EventHandler(this.GameForm_Click);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.speedControl)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -117,8 +136,9 @@ namespace GameOfLife
         private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
         private System.Windows.Forms.Label debugLabel;
         private System.Windows.Forms.Timer gameTimer;
-        private System.Windows.Forms.ToolStripMenuItem rewindToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem playToolStripMenuItem;
+        private System.Windows.Forms.Label gridSizeLabel;
+        private System.Windows.Forms.TrackBar speedControl;
     }
 }
 

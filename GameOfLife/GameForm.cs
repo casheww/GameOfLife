@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GameOfLife
@@ -32,7 +26,7 @@ namespace GameOfLife
             else
                 debugLabel.Hide();
 
-            gameTimer.Interval = 500;
+            gameTimer.Interval = baseTimerInterval;
         }
 
         private void NewToolStripMenuItem_Click(object sender, EventArgs e)
@@ -58,12 +52,20 @@ namespace GameOfLife
 
         private void GameTimer_Tick(object sender, EventArgs e)
         {
+            // just a solution for drawing on startup, since drawing isn't possible from the form's load event
+            if (firstTick)
+            {
+                StartNewGame();
+                gameTimer.Enabled = false;
+                firstTick = false;
+            }
+
             if (game != null) game.Update();
         }
+        bool firstTick = true;
 
         private void PlayToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            debugLabel.Text = gameTimer.Enabled.ToString();
             if (!gameTimer.Enabled)
             {
                 gameTimer.Start();
@@ -76,6 +78,13 @@ namespace GameOfLife
             }
         }
 
+        private void SpeedControl_Scroll(object sender, EventArgs e)
+        {
+            // range :  0 to 10  ->  -5 to 5  ->  0.5 to -0.5
+            double multiplier = (speedControl.Value - speedControl.Maximum / 2f) * -0.1;
+            gameTimer.Interval = (int)(baseTimerInterval * (1 + multiplier));
+        }
+
         #endregion formEvents
 
 
@@ -86,6 +95,7 @@ namespace GameOfLife
             DrawNewGrid();
 
             game = new GameOfLife(this, columnCount, rowCount);
+            gridSizeLabel.Text = $"Grid size : {columnCount}x{rowCount}";
         }
 
         /// <summary>
@@ -121,9 +131,30 @@ namespace GameOfLife
         {
             game.ToggleCellState(x, y, out bool alive);     // update game object's internal record
 
-            // colour the cell
-            Graphics graphics = CreateGraphics();
+            ColorCell(x, y, alive);
+        }
 
+        public void RedrawGrid()
+        {
+            for (int x = 0; x < columnCount; x++)
+            {
+                for (int y = 0; y < rowCount; y++)
+                {
+                    ColorCell(x, y);
+                }
+            }
+        }
+
+        void ColorCell(int x, int y)
+        {
+            game.TryGetCellState(x, y, out bool alive);
+            ColorCell(x, y, alive);
+        }
+
+        void ColorCell(int x, int y, bool alive)
+        {
+            Graphics graphics = CreateGraphics();
+            
             Color fillColor = alive ? ForeColor : BackColor;
 
             Brush brush = new SolidBrush(fillColor);
@@ -182,8 +213,10 @@ namespace GameOfLife
         const bool debugEnabled = true;
         public Label DebugLabel => debugLabel;
 
+        const int baseTimerInterval = 500;
+
         // dimensions of a single cell in pixels
-        const int cellWidth = 20;
+        const int cellWidth = 12;
         const int cellHeight = cellWidth;
 
         // edge padding of the game grid in pixels
