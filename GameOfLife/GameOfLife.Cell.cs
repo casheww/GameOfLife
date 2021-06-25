@@ -2,18 +2,18 @@
 {
     partial class GameOfLife
     {
-        struct Cell
+        public struct Cell
         {
-            public Cell(int x, int y)
+            public Cell(int x, int y, bool alive = false)
             {
-                alive = false;
                 this.x = x;
                 this.y = y;
+                this.alive = alive;
             }
 
-            public bool alive;
             public int x;
             public int y;
+            public bool alive;
 
         }
     }

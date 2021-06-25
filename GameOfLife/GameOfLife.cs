@@ -1,27 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameOfLife
 {
     partial class GameOfLife
     {
-        public GameOfLife(GameForm form, int cols, int rows)
+        public GameOfLife(GameForm form, int cols, int rows, Cell[,] cells, int generation = 0)
         {
             this.form = form;
-            playing = false;
 
-            cells = new Cell[cols, rows];
-            for (int x = 0; x < cols; x++)
+            if (cells == null)
             {
-                for (int y = 0; y < rows; y++)
+                Cells = new Cell[cols, rows];
+
+                for (int x = 0; x < cols; x++)
                 {
-                    cells[x, y] = new Cell(x, y);
+                    for (int y = 0; y < rows; y++)
+                    {
+                        Cells[x, y] = new Cell(x, y);
+                    }
                 }
             }
+            else Cells = cells;
 
+            Generation = generation;
         }
 
         /// <summary>
@@ -31,12 +33,15 @@ namespace GameOfLife
         /// </summary>
         public void Update()
         {
-            int cols = cells.GetLength(0);
-            int rows = cells.GetLength(1);
+            int cols = Cells.GetLength(0);
+            int rows = Cells.GetLength(1);
 
             // copy the cell grid to a new array so as to not overwrite the contents of the current generation
             Cell[,] nextGen = new Cell[cols, rows];
-            Array.Copy(cells, nextGen, cols * rows);
+            Array.Copy(Cells, nextGen, cols * rows);
+
+            // list of cell coords with changed states - allows for more efficient redrawing later
+            List<int[]> coordsChanged = new List<int[]>();
 
             // iterate through all cells
             for (int x = 0; x < cols; x++)
@@ -44,14 +49,18 @@ namespace GameOfLife
                 for (int y = 0; y < rows; y++)
                 {
                     RunRulesOnCell(x, y, nextGen[x, y].alive, out bool aliveAfter);
+
+                    if (nextGen[x, y].alive != aliveAfter) coordsChanged.Add(new int[] { x, y });
+
                     nextGen[x, y].alive = aliveAfter;
                 }
             }
 
             // replace current generation with the new generation of cells
-            cells = nextGen;
+            Cells = nextGen;
 
-            form.RedrawGrid();
+            Generation++;
+            form.RedrawCells(coordsChanged.ToArray());
         }
 
         void RunRulesOnCell(int x, int y, bool aliveBefore, out bool aliveAfter)
@@ -62,14 +71,17 @@ namespace GameOfLife
 
             if (aliveBefore)
             {
+                // underpopulation
                 if (livingNeighbourCount < 2)
                 {
                     aliveAfter = false;
                 }
+                // stability
                 else if (livingNeighbourCount == 2 || livingNeighbourCount == 3)
                 {
                     aliveAfter = true;
                 }
+                // overpopulation
                 else if (livingNeighbourCount > 3)
                 {
                     aliveAfter = false;
@@ -77,25 +89,12 @@ namespace GameOfLife
             }
             else
             {
+                // reproduction
                 if (livingNeighbourCount == 3)
                 {
                     aliveAfter = true;
                 }
             }
-
-            /*
-            // "Any live cell with fewer than two live neighbours dies, as if by underpopulation."
-            // "Any live cell with more than three live neighbours dies, as if by overpopulation."
-            if (aliveBefore)
-            {
-                if (livingNeighbourCount < 2 || livingNeighbourCount > 3)
-                    aliveAfter = false;
-            }
-            // "Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction."
-            else
-            {
-                if (livingNeighbourCount == 3) aliveAfter = true;
-            }*/
         }
 
 
@@ -126,20 +125,20 @@ namespace GameOfLife
         /// </summary>
         public void ToggleCellState(int x, int y, out bool newAlive)
         {
-            newAlive = !cells[x, y].alive;
-            cells[x, y].alive = newAlive;
+            newAlive = !Cells[x, y].alive;
+            Cells[x, y].alive = newAlive;
             
         }
 
         public bool TryGetCellState(int x, int y, out bool alive)
         {
-            if (x < 0 || x >= cells.GetLength(0) || y < 0 || y >= cells.GetLength(1))
+            if (x < 0 || x >= Cells.GetLength(0) || y < 0 || y >= Cells.GetLength(1))
             {
                 alive = false;
             }
             else
             {
-                alive = cells[x, y].alive;
+                alive = Cells[x, y].alive;
             }
 
             return true;
@@ -148,9 +147,9 @@ namespace GameOfLife
         #endregion cellStatus
 
         readonly GameForm form;
-        Cell[,] cells;
+        public Cell[,] Cells { get; private set; }
 
-        public bool playing;
+        public int Generation { get; private set; }
 
     }
 }
