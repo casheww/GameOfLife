@@ -9,6 +9,7 @@ namespace GameOfLife
             this.form = form;
             playing = false;
 
+            // create new cell array where all cells are dead
             Cells = new Cell[cols, rows];
             for (int x = 0; x < cols; x++)
             {
@@ -17,6 +18,8 @@ namespace GameOfLife
                     Cells[x, y] = new Cell(x, y);
                 }
             }
+
+            StartingSoup = new Cell[0, 0];
 
             Generation = 0;
             rand = new Random();
@@ -36,7 +39,7 @@ namespace GameOfLife
             Cell[,] nextGen = new Cell[cols, rows];
             Array.Copy(Cells, nextGen, cols * rows);
 
-            // iterate through all cells
+            // iterate through all cells to run the game rules on them
             for (int x = 0; x < cols; x++)
             {
                 for (int y = 0; y < rows; y++)
@@ -106,6 +109,7 @@ namespace GameOfLife
                     }
                     else
                     {
+                        // new cells that default to being dead
                         newGrid[x, y] = new Cell(x, y);
                     }
                 }
@@ -114,15 +118,28 @@ namespace GameOfLife
             Cells = newGrid;
         }
 
+        /// <summary>
+        /// Generate a new soup, where each cell's alive/dead status is random.
+        /// </summary>
         public void Soupify()
         {
-            for (int y = 0; y < Cells.GetLength(1); y++)
+            int cols = Cells.GetLength(0);
+            int rows = Cells.GetLength(1);
+
+            StartingSoup = new Cell[cols, rows];
+
+            for (int y = 0; y < rows; y++)
             {
-                for (int x = 0; x < Cells.GetLength(0); x++)
+                for (int x = 0; x < cols; x++)
                 {
-                    Cells[x, y].alive = rand.Next(0, 2) == 1;       // randomises Cell.alive for each cell
+                    bool alive = rand.Next(0, 2) == 1;       // randomises Cell.alive for each cell
+                    Cells[x, y].alive = alive;
+                    
+                    // store the starting soup in memory so we can export it later if it makes a pretty pattern
+                    StartingSoup[x, y] = new Cell(x, y, alive);
                 }
             }
+
         }
 
 
@@ -155,7 +172,6 @@ namespace GameOfLife
         {
             newAlive = !Cells[x, y].alive;
             Cells[x, y].alive = newAlive;
-            
         }
 
         public bool TryGetCellState(int x, int y, out bool alive)
@@ -174,29 +190,13 @@ namespace GameOfLife
 
         #endregion cellStatus
 
+
         readonly GameForm form;
-        public Cell[,] Cells
-        {
-            get => _cells;
-            set
-            {
-                // TODO : this is being called by Update, so we're also getting each generation.
-                // use an actual method with a bool param to set
+        readonly Random rand;
 
-                int cols = value.GetLength(0);
-                int rows = value.GetLength(1);
-
-                // whenever the grid is written or overwritten, we want to save a copy of the values
-                StartingSoup = new Cell[cols, rows];
-                Array.Copy(value, StartingSoup, cols * rows);
-                _cells = value;
-            }
-        }
-        private Cell[,] _cells;
+        public Cell[,] Cells { get; set; }
         public Cell[,] StartingSoup { get; private set; }
         public int Generation { get; private set; }
-
-        Random rand;
 
         public bool playing;
 

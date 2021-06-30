@@ -8,10 +8,13 @@ namespace GameOfLife
     {
         public static string Serialise(GameOfLife.Cell[,] cells, int wWidth, int wHeight)
         {
+            // file starts with some metadata
             string data = $"{serialisationFormatVersion}\n" +
                 $"window w{wWidth} h{wHeight}\n" +
                 $"grid w{cells.GetLength(0)} h{cells.GetLength(1)}\n";
 
+            // ... and then the grid representation
+            // I could use run length encoding here, but I think it's nice to be able to view 
             for (int y = 0; y < cells.GetLength(1); y++)
             {
                 for (int x = 0; x < cells.GetLength(0); x++)
