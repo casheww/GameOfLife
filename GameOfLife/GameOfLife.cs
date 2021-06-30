@@ -1,29 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace GameOfLife
 {
     partial class GameOfLife
     {
-        public GameOfLife(GameForm form, int cols, int rows, Cell[,] cells, int generation = 0)
+        public GameOfLife(GameForm form, int cols, int rows)
         {
             this.form = form;
+            playing = false;
 
-            if (cells == null)
+            Cells = new Cell[cols, rows];
+            for (int x = 0; x < cols; x++)
             {
-                Cells = new Cell[cols, rows];
-
-                for (int x = 0; x < cols; x++)
+                for (int y = 0; y < rows; y++)
                 {
-                    for (int y = 0; y < rows; y++)
-                    {
-                        Cells[x, y] = new Cell(x, y);
-                    }
+                    Cells[x, y] = new Cell(x, y);
                 }
             }
-            else Cells = cells;
 
-            Generation = generation;
+            Generation = 0;
+            rand = new Random();
         }
 
         /// <summary>
@@ -40,27 +36,22 @@ namespace GameOfLife
             Cell[,] nextGen = new Cell[cols, rows];
             Array.Copy(Cells, nextGen, cols * rows);
 
-            // list of cell coords with changed states - allows for more efficient redrawing later
-            List<int[]> coordsChanged = new List<int[]>();
-
             // iterate through all cells
             for (int x = 0; x < cols; x++)
             {
                 for (int y = 0; y < rows; y++)
                 {
                     RunRulesOnCell(x, y, nextGen[x, y].alive, out bool aliveAfter);
-
-                    if (nextGen[x, y].alive != aliveAfter) coordsChanged.Add(new int[] { x, y });
-
                     nextGen[x, y].alive = aliveAfter;
                 }
             }
 
             // replace current generation with the new generation of cells
             Cells = nextGen;
-
             Generation++;
-            form.RedrawCells(coordsChanged.ToArray());
+
+            form.RedrawCellStates();
+            form.UpdateGameDataLabel();
         }
 
         void RunRulesOnCell(int x, int y, bool aliveBefore, out bool aliveAfter)
@@ -93,6 +84,43 @@ namespace GameOfLife
                 if (livingNeighbourCount == 3)
                 {
                     aliveAfter = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a new 2D <see cref="Cell"/> array based on the given width and height
+        /// and copies cell states from the old to the new (0,0 anchored).
+        /// </summary>
+        public void ResizeGrid(int width, int height)
+        {
+            Cell[,] newGrid = new Cell[width, height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (y < Cells.GetLength(1) && x < Cells.GetLength(0))
+                    {
+                        newGrid[x, y] = Cells[x, y];
+                    }
+                    else
+                    {
+                        newGrid[x, y] = new Cell(x, y);
+                    }
+                }
+            }
+
+            Cells = newGrid;
+        }
+
+        public void Soupify()
+        {
+            for (int y = 0; y < Cells.GetLength(1); y++)
+            {
+                for (int x = 0; x < Cells.GetLength(0); x++)
+                {
+                    Cells[x, y].alive = rand.Next(0, 2) == 1;       // randomises Cell.alive for each cell
                 }
             }
         }
@@ -147,9 +175,30 @@ namespace GameOfLife
         #endregion cellStatus
 
         readonly GameForm form;
-        public Cell[,] Cells { get; private set; }
+        public Cell[,] Cells
+        {
+            get => _cells;
+            set
+            {
+                // TODO : this is being called by Update, so we're also getting each generation.
+                // use an actual method with a bool param to set
 
+                int cols = value.GetLength(0);
+                int rows = value.GetLength(1);
+
+                // whenever the grid is written or overwritten, we want to save a copy of the values
+                StartingSoup = new Cell[cols, rows];
+                Array.Copy(value, StartingSoup, cols * rows);
+                _cells = value;
+            }
+        }
+        private Cell[,] _cells;
+        public Cell[,] StartingSoup { get; private set; }
         public int Generation { get; private set; }
+
+        Random rand;
+
+        public bool playing;
 
     }
 }

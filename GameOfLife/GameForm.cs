@@ -11,7 +11,8 @@ namespace GameOfLife
         {
             InitializeComponent();
 
-            DoubleBuffered = true;
+            ForeColor = Color.LightGray;
+            BackColor = Color.FromArgb(140, 128, 100);
         }
 
         const bool debugEnabled = true;
@@ -21,19 +22,12 @@ namespace GameOfLife
 
         private void GameForm_Load(object sender, EventArgs e)
         {
-            //StartNewGame();
-
-            ForeColor = Color.LightGray;
-            BackColor = Color.FromArgb(140, 128, 100);
-
             if (debugEnabled)
                 debugLabel.Text = "debugging enabled";
             else
                 debugLabel.Hide();
 
             gameTimer.Interval = baseTimerInterval;
-
-            SetSpeedControlPosition();
         }
 
         private void NewToolStripMenuItem_Click(object sender, EventArgs e)
@@ -43,7 +37,7 @@ namespace GameOfLife
 
         private void GameForm_Click(object sender, EventArgs e)
         {
-            if (game == null || gameTimer.Enabled) return;       // ignore clicks on the form base if the game is in action
+            if (game == null || game.playing) return;       // ignore clicks on the form base if the game is in action
 
             MouseEventArgs args = e as MouseEventArgs;
 
@@ -57,17 +51,24 @@ namespace GameOfLife
             }
         }
 
+        private void GameForm_ResizeEnd(object sender, EventArgs e)
+        {
+            SetSpeedControlPosition();
+            ResizeGameGrid();
+        }
+
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            if (game != null && !firstTick) game.Update();
-
             // just a solution for drawing on startup, since drawing isn't possible from the form's load event
             if (firstTick)
             {
                 StartNewGame();
-                gameTimer.Stop();
+                SetSpeedControlPosition();
+                gameTimer.Enabled = false;
+                gameTimer.Interval = baseTimerInterval;
                 firstTick = false;
             }
+            else if (game != null) game.Update();
         }
         bool firstTick = true;
 
@@ -87,14 +88,15 @@ namespace GameOfLife
 
         private void SpeedControl_Scroll(object sender, EventArgs e)
         {
-            // range :  0 to 10  ->  -5 to 5  ->  0.5 to -0.5
-            double multiplier = (speedControl.Value - speedControl.Maximum / 2f) * -0.1;
-            gameTimer.Interval = (int)(baseTimerInterval * (1 + multiplier));
+            // range :  0 to 10  ->  -5 to 5  ->  0.95 to -0.95
+            double multiplier = (speedControl.Value - speedControl.Maximum / 2f) * -0.19;
+            multiplier += 1;        // range: 0.05 to 1.95
+            gameTimer.Interval = (int)(baseTimerInterval * multiplier);
         }
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string saveData = Serialisation.Serialise(game.Generation, game.Cells, Size.Width, Size.Height);
+            string saveData = Serialisation.Serialise(game.Cells, Size.Width, Size.Height);
 
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
@@ -138,24 +140,48 @@ namespace GameOfLife
                 }
                 openFileDialog.Dispose();
 
-                try
-                {
-                    Serialisation.Deserialise(raw, out int gen, out GameOfLife.Cell[,] cells, out int wWidth, out int wHeight);
-                    Size = new Size(wWidth, wHeight);
-                    StartNewGame(cells, gen);
-                }
-                catch (FormatException)
-                {
-                    Form dlg = new Form();
-                    dlg.ShowDialog();
-                }
-            }
+                Serialisation.Deserialise(raw, out GameOfLife.Cell[,] cells, out int wWidth, out int wHeight);
 
+                StartNewGame();
+                game.Cells = cells;
+                Size = new Size(wWidth, wHeight);
+
+                RedrawCellStates();
+            }
+            
         }
 
-        private void GameForm_Resize(object sender, EventArgs e)
+        private void NewSoup_ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetSpeedControlPosition();
+            StartNewGame();
+            game.Soupify();
+            RedrawCellStates();
+        }
+
+        private void ExportSoupToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // get save data without metadata
+            string saveData = Serialisation.Serialise(game.StartingSoup, Size.Width, Size.Height);
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Title = "Export your starting Soup",
+                Filter = "Text file|*.txt",
+                InitialDirectory = Path.Combine(Directory.GetCurrentDirectory(), Serialisation.savePath),
+                FileName = "life-soup",
+                AddExtension = true
+            };
+            saveFileDialog.ShowDialog();
+
+            if (saveFileDialog.FileName != "")
+            {
+                Stream fs = saveFileDialog.OpenFile();
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    sw.Write(saveData);
+                }
+                saveFileDialog.Dispose();
+            }
         }
 
         #endregion formEvents
@@ -163,16 +189,25 @@ namespace GameOfLife
 
         #region drawing
 
-        void StartNewGame(GameOfLife.Cell[,] cells = null, int generation = 0)
+        void StartNewGame()
         {
-            gameTimer.Stop();
             DrawNewGrid();
 
-            game = new GameOfLife(this, columnCount, rowCount, cells, generation);
+            game = new GameOfLife(this, columnCount, rowCount);
+            UpdateGameDataLabel();
+        }
 
+        /// <summary>
+        /// Handles dynamic resizing of the game grid to the game window.
+        /// </summary>
+        void ResizeGameGrid()
+        {
+            DrawNewGrid();
+
+            game.ResizeGrid(columnCount, rowCount);
             UpdateGameDataLabel();
 
-            RedrawCells();
+            RedrawCellStates();
         }
 
         /// <summary>
@@ -211,33 +246,15 @@ namespace GameOfLife
             ColorCell(x, y, alive);
         }
 
-        /// <summary>
-        /// Redraws the grid so that cells are up to date. Notable usage: <see cref="GameOfLife.Update"/>.
-        /// </summary>
-        /// <param name="coordsChanged">If this is not null, only coord arrays in the array will be redrawn.</param>
-        public void RedrawCells(int[][] coordsChanged = null)
+        public void RedrawCellStates()
         {
-            if (coordsChanged == null)
+            for (int x = 0; x < columnCount; x++)
             {
-                for (int x = 0; x < columnCount; x++)
+                for (int y = 0; y < rowCount; y++)
                 {
-                    for (int y = 0; y < rowCount; y++)
-                    {
-                        ColorCell(x, y);
-                    }
+                    ColorCell(x, y);
                 }
             }
-            else
-            {
-                // here we can redraw only the cells whose state has changed
-                // this gives a visible performance increase - scan lines are far less visible
-                for (int i = 0; i < coordsChanged.Length; i++)
-                {
-                    ColorCell(coordsChanged[i][0], coordsChanged[i][1]);
-                }
-            }
-
-            UpdateGameDataLabel();
         }
 
         void ColorCell(int x, int y)
@@ -260,10 +277,14 @@ namespace GameOfLife
             brush.Dispose();
         }
 
-        void UpdateGameDataLabel()
+        void SetSpeedControlPosition()
         {
-            gameDataLabel.Text = $"Grid size : {columnCount}x{rowCount}  \t" +
-                $"Generation : {game.Generation}";
+            speedControl.Location = new Point(Size.Width - speedControl.Width - 20, 30);
+        }
+
+        public void UpdateGameDataLabel()
+        {
+            gridSizeLabel.Text = $"Grid size : {columnCount}x{rowCount}\t  Generation : {game.Generation}";
         }
 
         #endregion drawing
@@ -305,13 +326,6 @@ namespace GameOfLife
             int px = MinX + x * cellWidth;
             int py = MinY + y * cellHeight;
             return new Point(px, py);
-        }
-
-        void SetSpeedControlPosition()
-        {
-            int x = Size.Width - 25 - speedControl.Width;
-            int y = speedControl.Height - 15;
-            speedControl.Location = new Point(x, y);
         }
 
         #endregion utilities

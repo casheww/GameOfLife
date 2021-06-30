@@ -36,9 +36,12 @@ namespace GameOfLife
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.playToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.soupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportSoupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugLabel = new System.Windows.Forms.Label();
             this.gameTimer = new System.Windows.Forms.Timer(this.components);
-            this.gameDataLabel = new System.Windows.Forms.Label();
+            this.gridSizeLabel = new System.Windows.Forms.Label();
             this.speedControl = new System.Windows.Forms.TrackBar();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.speedControl)).BeginInit();
@@ -48,7 +51,8 @@ namespace GameOfLife
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.playToolStripMenuItem});
+            this.playToolStripMenuItem,
+            this.soupToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(888, 24);
@@ -68,21 +72,21 @@ namespace GameOfLife
             // newToolStripMenuItem
             // 
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.newToolStripMenuItem.Text = "New";
             this.newToolStripMenuItem.Click += new System.EventHandler(this.NewToolStripMenuItem_Click);
             // 
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.loadToolStripMenuItem.Text = "Load";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.LoadToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.SaveToolStripMenuItem_Click);
             // 
@@ -92,6 +96,29 @@ namespace GameOfLife
             this.playToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
             this.playToolStripMenuItem.Text = "Play";
             this.playToolStripMenuItem.Click += new System.EventHandler(this.PlayToolStripMenuItem_Click);
+            // 
+            // soupToolStripMenuItem
+            // 
+            this.soupToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newToolStripMenuItem1,
+            this.exportSoupToolStripMenuItem});
+            this.soupToolStripMenuItem.Name = "soupToolStripMenuItem";
+            this.soupToolStripMenuItem.Size = new System.Drawing.Size(46, 20);
+            this.soupToolStripMenuItem.Text = "Soup";
+            // 
+            // newToolStripMenuItem1
+            // 
+            this.newToolStripMenuItem1.Name = "newToolStripMenuItem1";
+            this.newToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.newToolStripMenuItem1.Text = "New";
+            this.newToolStripMenuItem1.Click += new System.EventHandler(this.NewSoup_ToolStripMenuItem_Click);
+            // 
+            // exportSoupToolStripMenuItem
+            // 
+            this.exportSoupToolStripMenuItem.Name = "exportSoupToolStripMenuItem";
+            this.exportSoupToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exportSoupToolStripMenuItem.Text = "Export soup";
+            this.exportSoupToolStripMenuItem.Click += new System.EventHandler(this.ExportSoupToolStripMenuItem_Click);
             // 
             // debugLabel
             // 
@@ -107,21 +134,20 @@ namespace GameOfLife
             this.gameTimer.Enabled = true;
             this.gameTimer.Tick += new System.EventHandler(this.GameTimer_Tick);
             // 
-            // gameDataLabel
+            // gridSizeLabel
             // 
-            this.gameDataLabel.AutoSize = true;
-            this.gameDataLabel.Location = new System.Drawing.Point(12, 24);
-            this.gameDataLabel.Name = "gameDataLabel";
-            this.gameDataLabel.Size = new System.Drawing.Size(82, 13);
-            this.gameDataLabel.TabIndex = 2;
-            this.gameDataLabel.Text = "gameDataLabel";
+            this.gridSizeLabel.AutoSize = true;
+            this.gridSizeLabel.Location = new System.Drawing.Point(12, 24);
+            this.gridSizeLabel.Name = "gridSizeLabel";
+            this.gridSizeLabel.Size = new System.Drawing.Size(70, 13);
+            this.gridSizeLabel.TabIndex = 2;
+            this.gridSizeLabel.Text = "gridSizeLabel";
             // 
             // speedControl
             // 
-            this.speedControl.Location = new System.Drawing.Point(751, 27);
+            this.speedControl.Location = new System.Drawing.Point(760, 27);
             this.speedControl.Name = "speedControl";
-            this.speedControl.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.speedControl.Size = new System.Drawing.Size(125, 45);
+            this.speedControl.Size = new System.Drawing.Size(116, 45);
             this.speedControl.TabIndex = 3;
             this.speedControl.Value = 5;
             this.speedControl.Scroll += new System.EventHandler(this.SpeedControl_Scroll);
@@ -132,15 +158,15 @@ namespace GameOfLife
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(888, 515);
             this.Controls.Add(this.speedControl);
-            this.Controls.Add(this.gameDataLabel);
+            this.Controls.Add(this.gridSizeLabel);
             this.Controls.Add(this.debugLabel);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "GameForm";
             this.Text = "Game of Life";
-            this.Load += new System.EventHandler(this.GameForm_Load);
+            this.Load += new System.EventHandler(this.GameForm_Click);
+            this.ResizeEnd += new System.EventHandler(this.GameForm_ResizeEnd);
             this.Click += new System.EventHandler(this.GameForm_Click);
-            this.Resize += new System.EventHandler(this.GameForm_Resize);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.speedControl)).EndInit();
@@ -157,10 +183,13 @@ namespace GameOfLife
         private System.Windows.Forms.Label debugLabel;
         private System.Windows.Forms.Timer gameTimer;
         private System.Windows.Forms.ToolStripMenuItem playToolStripMenuItem;
-        private System.Windows.Forms.Label gameDataLabel;
+        private System.Windows.Forms.Label gridSizeLabel;
         private System.Windows.Forms.TrackBar speedControl;
         private System.Windows.Forms.ToolStripMenuItem loadToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem soupToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem exportSoupToolStripMenuItem;
     }
 }
 
