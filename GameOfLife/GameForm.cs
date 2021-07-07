@@ -37,7 +37,7 @@ namespace GameOfLife
 
         private void GameForm_Click(object sender, EventArgs e)
         {
-            if (game == null || game.playing) return;       // ignore clicks on the form base if the game is in action
+            if (game == null) return;
 
             MouseEventArgs args = e as MouseEventArgs;
 

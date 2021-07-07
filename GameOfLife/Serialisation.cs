@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace GameOfLife
 {
@@ -31,14 +29,17 @@ namespace GameOfLife
         {
             string[] lines = Regex.Split(raw, @"\n");
 
+            // check for window size metadata
             Match windowMatch = Regex.Match(lines[1], @"^window w([0-9]+) h([0-9]+)$");
             wWidth = int.Parse(windowMatch.Groups[1].Value);
             wHeight = int.Parse(windowMatch.Groups[2].Value);
 
+            // check for grid size metadata
             Match gridMatch = Regex.Match(lines[2], @"^grid w([0-9]+) h([0-9]+)$");
             int w = int.Parse(gridMatch.Groups[1].Value);
             int h = int.Parse(gridMatch.Groups[2].Value);
 
+            // line index for where cell data starts after the aforementioned 'metadata'
             int metadataOffset = 3;
 
             cells = new GameOfLife.Cell[w, h];

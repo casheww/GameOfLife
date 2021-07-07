@@ -179,6 +179,8 @@ namespace GameOfLife
             if (x < 0 || x >= Cells.GetLength(0) || y < 0 || y >= Cells.GetLength(1))
             {
                 alive = false;
+                // default to false if current neighbour is outside of the grid
+                // ... unfortunately this prevents gliders and other spaceships/puffers from exiting the screen properly
             }
             else
             {
